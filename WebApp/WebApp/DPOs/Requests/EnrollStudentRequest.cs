@@ -15,9 +15,10 @@ namespace WebApp.DPOs.Requests
         [Required]
         public string LastName { get; set; }
         [Required]
-        public DateTime BirbDate { get; set; }
+        public string BirthDate { get; set; }
         [Required]
         public string Studies { get; set; }
+       
 
 
     }

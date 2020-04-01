@@ -25,13 +25,23 @@ namespace WebApp.Controllers
         public IActionResult EnrollStudent(EnrollStudentRequest request)
         {
            
-            string result = _service.EnrollStudent(request);  
+            string result = _service.EnrollStudent(request);
+            if (result.Contains("Failed:"))
+                return BadRequest(result);
             return Ok(result);
         }
+        [HttpPost("{promotions}")]
+        public IActionResult PromoteStudents(PromoteStudentRequest request)
+        {
+            string result = _service.PromoteStudents(request);
+            if(result.Contains("Failed:"))
+                return BadRequest(result);
+            return Ok(result);
 
+        }
         [HttpGet]
         public IActionResult GetEnrollments()
-        {
+        {   
             return Ok("Welcome to enrolling.");
 
         }

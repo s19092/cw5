@@ -10,7 +10,7 @@ namespace WebApp.Services
     {
 
         string EnrollStudent(EnrollStudentRequest req);
-        string PromoteStudents(int semester, string studies);
+        string PromoteStudents(PromoteStudentRequest req);
 
     }
 }
