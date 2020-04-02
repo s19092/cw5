@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WebApp.DPOs.Requests;
+using WebApp.Models;
 
 namespace WebApp.Services
 {
@@ -95,42 +96,48 @@ namespace WebApp.Services
             }
 
         }
-    
+
 
         public string PromoteStudents(PromoteStudentRequest request)
         {
-            using( SqlConnection connection = new SqlConnection(ConnectionString))
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
-                SqlTransaction trans = connection.BeginTransaction("Tran");
 
-                using(var command = new SqlCommand("SELECT * FROM Enrollment e INNER JOIN Studies s " +
-                    "ON e.idstudy = s.idstudy WHERE s.name = @studies_name AND e.semester = @semester",connection))
+                using (var command = new SqlCommand("EXECUTE jd0 @studies_name , @semester",connection))
                 {
 
-                    command.Transaction = trans;
                     command.Parameters.AddWithValue("studies_name", request.Studies);
                     command.Parameters.AddWithValue("semester", request.Semester);
-                    using (var reader = command.ExecuteReader())
+                    try
                     {
-
-                        if (!reader.Read())
+                        using (var reader = command.ExecuteReader())
                         {
-                            reader.Close();
-                            trans.Rollback();
-                            return "Failed: Studies or semester " + request.Studies + " / " + request.Semester + " does not exist.";
-                            
+
+                            if (!reader.Read())
+                            {
+                                return "Failed: Unable to read.";
+                            }
+                            Enrollment enrollment = new Enrollment
+                            {
+                                IdEnrollment = (int)reader["IdEnrollment"],
+                                Semester = (int)reader["Semester"],
+                                IdStudy = (int)reader["IdStudy"],
+                                StartDate = (DateTime)reader["StartDate"]
+                            };
+
+                            return enrollment.ToString();
+
                         }
+                    }catch(SqlException e)
+                    {
+                       
+                        return "Failed: Check if procedure exists. " + e.Message;
 
                     }
-                    command.CommandText = "EXECUTE jd0 @studies_name , @semester";
-                    command.ExecuteNonQuery();
-                    trans.Commit();
-
-                    return "Students Promoted.";
-                }
-
+;               }
             }
         }
+        
     }
 }
