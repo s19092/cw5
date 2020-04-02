@@ -14,9 +14,7 @@ namespace WebApp.Services
         private string ConnectionString = "Data Source=db-mssql;Initial Catalog=s19092;Integrated Security=True";
 
         public string EnrollStudent(EnrollStudentRequest req)
-        {
-
-
+        {            
             using (SqlConnection connection = new SqlConnection(ConnectionString))
             {
                 
@@ -101,7 +99,38 @@ namespace WebApp.Services
 
         public string PromoteStudents(PromoteStudentRequest request)
         {
-            return "Failed:"; 
+            using( SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                SqlTransaction trans = connection.BeginTransaction("Tran");
+
+                using(var command = new SqlCommand("SELECT * FROM Enrollment e INNER JOIN Studies s " +
+                    "ON e.idstudy = s.idstudy WHERE s.name = @studies_name AND e.semester = @semester",connection))
+                {
+
+                    command.Transaction = trans;
+                    command.Parameters.AddWithValue("studies_name", request.Studies);
+                    command.Parameters.AddWithValue("semester", request.Semester);
+                    using (var reader = command.ExecuteReader())
+                    {
+
+                        if (!reader.Read())
+                        {
+                            reader.Close();
+                            trans.Rollback();
+                            return "Failed: Studies or semester " + request.Studies + " / " + request.Semester + " does not exist.";
+                            
+                        }
+
+                    }
+                    command.CommandText = "EXECUTE jd0 @studies_name , @semester";
+                    command.ExecuteNonQuery();
+                    trans.Commit();
+
+                    return "Students Promoted.";
+                }
+
+            }
         }
     }
 }
