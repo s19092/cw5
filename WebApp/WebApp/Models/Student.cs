@@ -14,5 +14,11 @@ namespace WebApp.Models
         public DateTime BirthDate { get; set; }
         public int IdEnrollment { get; set; }
 
+
+        public override string ToString()
+        {
+            return "{ " + FirstName + ", " + LastName + ", " + IndexNumber + " }";
+        }
+
     }
 }

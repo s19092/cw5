@@ -97,6 +97,47 @@ namespace WebApp.Services
 
         }
 
+        public Student GetStudent(string indexNumber)
+        {
+
+            using (SqlConnection connection = new SqlConnection(ConnectionString))
+            {
+
+                connection.Open();
+                using (var command = new SqlCommand("SELECT * FROM Student WHERE IndexNumber = @index",connection))
+                {
+
+                    command.Parameters.AddWithValue("index", indexNumber);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+
+                        if (!reader.Read())
+                            return null;
+                        return new Student
+                        {
+
+                            IndexNumber = indexNumber,
+                            FirstName = reader["FirstName"].ToString(),
+                            LastName = reader["LastName"].ToString(),
+                            BirthDate = (DateTime)reader["BirthDate"],
+                            IdEnrollment = (int)reader["IdEnrollment"]
+                        };
+
+                       
+
+                    }
+
+                }
+              
+
+
+            }
+
+            return null;
+        }
+
+
 
         public string PromoteStudents(PromoteStudentRequest request)
         {
@@ -135,9 +176,10 @@ namespace WebApp.Services
                         return "Failed: Check if procedure exists. " + e.Message;
 
                     }
-;               }
+               }
             }
         }
-        
+
+       
     }
 }

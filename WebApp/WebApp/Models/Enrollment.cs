@@ -17,7 +17,7 @@ namespace WebApp.Models
 
         public override string ToString()
         { 
-            return IdEnrollment + ", id study:" + IdStudy + ", Semester: " +Semester + "Start date: "+ StartDate ;
+            return "{ " +IdEnrollment + ", id study:" + IdStudy + ", Semester: " +Semester + "Start date: "+ StartDate +" }";
         }
     }
 }
