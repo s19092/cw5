@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApp.Middlewares;
 using WebApp.Models;
@@ -31,7 +34,24 @@ namespace WebApp
         public void ConfigureServices(IServiceCollection services)
         {
 
-            services.AddControllers();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).
+                AddJwtBearer(options =>
+                {
+
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                    {
+
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidIssuer = "Gakko",
+                        ValidAudience = "Students",
+                        IssuerSigningKey = new SymmetricSecurityKey
+                        (Encoding.UTF8.GetBytes(Configuration["SecretKey"]))
+                    };
+                });
+            services.AddControllers().
+                AddXmlSerializerFormatters();
 
             services.AddSwaggerGen(config =>
             {
@@ -39,6 +59,7 @@ namespace WebApp
                 config.SwaggerDoc("v1", new OpenApiInfo { Title = " Students App API", Version = "v1"});
 
             });
+
 
 
             services.AddTransient<IStudentDbService, SqlStudentDbService>();
@@ -59,7 +80,7 @@ namespace WebApp
             });
 
 
-
+/*
             app.UseMiddleware<LoggingMiddleware>();
             app.Use(async (context, next) =>
             {
@@ -89,10 +110,12 @@ namespace WebApp
 
                 await next();
             });
-            
+  */          
             app.UseRouting();
-
             app.UseAuthentication();
+            app.UseAuthorization();
+
+
 
             app.UseEndpoints(endpoints =>
             {
