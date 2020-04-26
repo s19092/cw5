@@ -63,6 +63,7 @@ namespace WebApp
 
 
             services.AddTransient<IStudentDbService, SqlStudentDbService>();
+          
 
         }
 
@@ -114,7 +115,6 @@ namespace WebApp
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-
 
 
             app.UseEndpoints(endpoints =>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebApp.DPOs.Requests;
 using WebApp.Services;
@@ -22,6 +23,7 @@ namespace WebApp.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "employee")]
         public IActionResult EnrollStudent(EnrollStudentRequest request)
         {
            
@@ -30,7 +32,9 @@ namespace WebApp.Controllers
                 return BadRequest(result);
             return Ok(result);
         }
+
         [HttpPost("{promotions}")]
+        [Authorize(Roles = "employee")]
         public IActionResult PromoteStudents(PromoteStudentRequest request)
         {
             string result = _service.PromoteStudents(request);

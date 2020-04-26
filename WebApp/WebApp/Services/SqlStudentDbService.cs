@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using WebApp.DPOs.Requests;
 using WebApp.Models;
 
@@ -138,6 +141,102 @@ namespace WebApp.Services
         }
 
 
+        public string Login(LoginRequest request)
+        {
+
+            var response = new StringBuilder();
+
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                string password = null, salt = null;
+                using(var command = new SqlCommand("SELECT * FROM Student WHERE indexNumber = @login AND password IS NULL",connection))
+                {
+                    command.Parameters.AddWithValue("login", request.Login);
+                    using (var reader = command.ExecuteReader())
+                    {
+
+                        if (reader.Read())
+                        {
+                            reader.Close();
+                            byte[] saltB = new byte[128 / 8];
+                            using (var generator = RandomNumberGenerator.Create())
+                            {
+                                generator.GetBytes(saltB);
+                            }
+                            salt = Convert.ToBase64String(saltB);
+                          
+                            password = createPassword(request.Password, salt);
+                           
+                            
+                        }
+                                                                        
+                    }
+
+
+                }
+                if(password != null)
+                {
+
+                    using (var command = new SqlCommand
+                        ("UPDATE student SET password = @password , salt = @salt WHERE indexnumber = @index",connection))
+                    {
+
+                        command.Parameters.AddWithValue("salt",salt);
+                        command.Parameters.AddWithValue("password", password);
+                        command.Parameters.AddWithValue("index", request.Login);
+                        command.ExecuteNonQuery();
+                       
+
+                    }
+
+                }
+                
+
+              
+                using (var command = new SqlCommand("SELECT * FROM Student WHERE indexNumber = @login",connection))
+                {
+
+                    command.Parameters.AddWithValue("login", request.Login);
+                  
+                    using (var reader = command.ExecuteReader())
+                    {
+
+                        if (!reader.Read())
+                            return "Failed:";
+                        response.Append("Connected:");
+                        salt = reader["salt"].ToString();
+                        password = reader["password"].ToString();
+                    }
+
+                }
+
+                return (request.Password + " " + createPassword(request.Password, salt));
+
+                if (!createPassword(request.Password, salt).Equals(password)) 
+                    return "Failed:";
+                return "Connect:";
+               
+            }
+           
+
+
+            return null;
+
+        }
+
+        public string createPassword(string pass,string salt)
+        {
+            var valueBytes = KeyDerivation.Pbkdf2(
+
+                               password: pass,
+                               salt: Encoding.UTF8.GetBytes(salt),
+                               prf: KeyDerivationPrf.HMACSHA512,
+                               iterationCount: 100,
+                               numBytesRequested: 256 / 8);
+            return Convert.ToBase64String(valueBytes);
+        }
+
 
         public string PromoteStudents(PromoteStudentRequest request)
         {
@@ -180,6 +279,56 @@ namespace WebApp.Services
             }
         }
 
-       
+        public string RefreshToken(string refresh)
+        {
+            var respond = new StringBuilder();
+
+            using(var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using(var command = new SqlCommand("SELECT * FROM Student WHERE refresh = @reffo",connection))
+                {
+
+                    command.Parameters.AddWithValue("reffo", refresh);
+                    using (var reader = command.ExecuteReader())
+                    {
+
+                        if (!reader.Read())
+                            return "Failed:";
+                        
+                    }
+
+
+                }
+
+            }
+
+            return "Connected:";
+            
+        }
+
+        public string UpdateToken( Guid refreshToken,string index)
+        {
+
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+                using (var command = new SqlCommand("UPDATE Student SET refresh = @ref WHERE indexNumber = @index",connection))
+                {
+
+                    command.Parameters.AddWithValue("ref", refreshToken.ToString());
+                    command.Parameters.AddWithValue("index", index);
+                    command.ExecuteNonQuery();
+                    return "JD";
+
+
+                }
+
+            }
+        
+            
+        }
+
+
     }
 }

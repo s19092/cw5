@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApp.DPOs.Requests;
@@ -15,5 +16,13 @@ namespace WebApp.Services
 
         Student GetStudent(string indexNumber);
 
+        string RefreshToken(string refresh);
+        
+
+
+  
+
+        string Login(LoginRequest req);
+        string UpdateToken(Guid refreshToken,string index);
     }
 }
